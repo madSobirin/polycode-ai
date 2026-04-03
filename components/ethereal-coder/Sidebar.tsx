@@ -81,7 +81,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Upgrade Card */}
-      <div className="mt-auto p-4 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+      <div className="mt-auto p-4 rounded-xl bg-linear-to-br from-blue-600 to-blue-700 text-white">
         <div className="text-xs font-bold mb-2">Upgrade to Pro</div>
         <div className="text-[10px] opacity-90 mb-3 leading-relaxed">
           Unlock unlimited schema complexity and cloud exports.

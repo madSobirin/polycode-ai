@@ -33,7 +33,7 @@ const TopNav = () => {
           <LogIn className="w-4 h-4" />
           Login
         </button>
-        <button className="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-[Manrope] font-bold text-sm tracking-tight hover:opacity-90 active:opacity-80 transition-all shadow-md shadow-blue-500/20 cursor-pointer">
+        <button className="px-5 py-2 bg-linear-to-r from-blue-600 to-blue-500 text-white rounded-lg font-[Manrope] font-bold text-sm tracking-tight hover:opacity-90 active:opacity-80 transition-all shadow-md shadow-blue-500/20 cursor-pointer">
           Sign Up
         </button>
       </div>
