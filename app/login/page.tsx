@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, ChevronRight } from "lucide-react";
-import AuthLayout from "@/components/ethereal-coder/AuthLayout";
+import AuthLayout from "@/components/auth/AuthLayout";
 
 export default function LoginPage() {
   return (
