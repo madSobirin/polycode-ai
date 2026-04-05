@@ -11,3 +11,67 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+// 1. Tabel User (Bisa diintegrasikan dengan NextAuth.js)
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  avatarUrl     String?
+  
+  projects      Project[] // Relasi: 1 User punya banyak Project
+  histories     History[] // Relasi: 1 User punya banyak History
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 2. Tabel Project (Folder Kerja, misal: "Fitlife Backend" atau "MyBooks")
+model Project {
+  id            String    @id @default(cuid())
+  name          String    
+  description   String?
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  schemas       Schema[]  // Relasi: 1 Project punya banyak versi Schema
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+// 3. Tabel Schema (Penyimpan Source of Truth / Skema Mentah)
+model Schema {
+  id            String    @id @default(cuid())
+  version       Int       @default(1) // Menyimpan jejak versi: v1, v2, dst
+  sourceCode    String    @db.Text    // Isi teks asli dari file .sql atau .json
+  
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([projectId])
+}
+
+// 4. Tabel History (Log aktivitas Generate Code)
+model History {
+  id            String    @id @default(cuid())
+  sourceType    String    // Contoh: "SQL", "Laravel Migration"
+  targetTypes   String[]  // Array target, contoh: ["Prisma", "Flutter", "TypeScript"]
+  
+  // Menggunakan tipe JSON untuk menyimpan file hasil generate
+  // Formatnya misal: { "schema.prisma": "...", "user_model.dart": "..." }
+  generatedCode Json      
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+}
