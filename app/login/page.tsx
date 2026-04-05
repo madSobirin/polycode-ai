@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, ChevronRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 import AuthLayout from "@/components/auth/AuthLayout";
 
 export default function LoginPage() {
@@ -30,7 +33,10 @@ export default function LoginPage() {
       </div>
 
       {/* Social Login */}
-      <button className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#ffffff] ghost-border rounded-xl text-[#191c1d] font-medium hover:bg-[#f3f4f5] transition-colors mb-6 group">
+      <button
+        onClick={() => signIn("google", { callbackUrl: "/" })}
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#ffffff] ghost-border rounded-xl text-[#191c1d] font-medium hover:bg-[#f3f4f5] transition-colors mb-6 group cursor-pointer"
+      >
         <svg
           className="w-5 h-5 group-hover:scale-105 transition-transform"
           viewBox="0 0 24 24"

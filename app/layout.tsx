@@ -1,8 +1,9 @@
-import { SessionProvider } from "next-auth/react";
+// "use client";
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Providers } from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-headline" });
@@ -23,7 +24,9 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable)}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
