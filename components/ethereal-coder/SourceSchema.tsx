@@ -81,7 +81,7 @@ const SourceSchema = () => {
   };
 
   return (
-    <section className="flex-1 flex flex-col gap-6 max-w-md">
+    <section className="flex flex-col gap-6 w-full xl:w-[400px] xl:shrink-0 min-w-0">
       {/* Section Header */}
       <header>
         <h2 className="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">

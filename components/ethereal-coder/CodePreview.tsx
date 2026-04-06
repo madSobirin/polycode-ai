@@ -116,9 +116,9 @@ const CodePreview = () => {
   };
 
   return (
-    <section className="flex-[1.5] flex flex-col gap-6">
+    <section className="flex-1 flex flex-col gap-6 min-h-[500px] xl:min-h-0 min-w-0">
       {/* Header */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <header>
           <h2 className="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">
             Generated Code
@@ -127,7 +127,7 @@ const CodePreview = () => {
             Output Preview
           </h1>
         </header>
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg self-start sm:self-auto">
           {(["editor", "docs"] as const).map((mode) => (
             <button
               key={mode}
@@ -145,18 +145,18 @@ const CodePreview = () => {
       </div>
 
       {/* Code Viewer */}
-      <div className="flex-1 flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5">
+      <div className="flex-1 flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/5 min-h-0 min-w-0">
         {/* macOS-style title bar */}
-        <div className="h-12 bg-[#2d2d2d] flex items-center px-4 justify-between shrink-0">
+        <div className="h-12 bg-[#2d2d2d] flex items-center px-4 justify-between shrink-0 overflow-x-auto">
           {/* Traffic lights */}
-          <div className="flex gap-2">
+          <div className="hidden sm:flex gap-2 mr-4">
             <div className="w-3 h-3 rounded-full bg-red-500" />
             <div className="w-3 h-3 rounded-full bg-amber-500" />
             <div className="w-3 h-3 rounded-full bg-green-500" />
           </div>
 
           {/* File tabs — from real result or placeholders */}
-          <div className="flex gap-px overflow-x-auto">
+          <div className="flex gap-px overflow-x-auto flex-1 hide-scrollbar">
             {files.length > 0 ? (
               files.map((file) => (
                 <button
@@ -172,14 +172,14 @@ const CodePreview = () => {
                 </button>
               ))
             ) : (
-              <span className="px-4 py-3 text-[11px] text-slate-600">
+              <span className="px-4 py-3 text-[11px] text-slate-600 whitespace-nowrap">
                 Waiting for generation...
               </span>
             )}
           </div>
 
           {/* Action icons */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 shrink-0 bg-[#2d2d2d] pl-4">
             <button
               onClick={handleCopy}
               disabled={!activeFile}
@@ -196,7 +196,7 @@ const CodePreview = () => {
         </div>
 
         {/* Code content */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-auto bg-[#1e1e1e]">
           {viewMode === "editor" ? (
             activeFile ? (
               highlightCode(activeFile.content, activeFile.filename)

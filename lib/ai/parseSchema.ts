@@ -44,7 +44,7 @@ Rules:
 // ─── Gemini AI Parser ────────────────────────────────────────────────────────
 async function parseWithAI(
   fileContent: string,
-  fileType: "sql" | "json"
+  fileType: "sql" | "json",
 ): Promise<ParsedSchema> {
   const userMessage =
     fileType === "sql"
@@ -78,7 +78,7 @@ async function parseWithAI(
 // ─── Built-in SQL Fallback Parser ───────────────────────────────────────────
 function parseWithFallback(
   fileContent: string,
-  fileType: "sql" | "json"
+  fileType: "sql" | "json",
 ): ParsedSchema {
   if (fileType === "json") {
     return parseJsonFallback(fileContent);
@@ -114,7 +114,9 @@ function parseSqlFallback(sql: string): ParsedSchema {
       if (/^PRIMARY\s+KEY/i.test(trimmed)) {
         const pkMatch = trimmed.match(/PRIMARY\s+KEY\s*\(([^)]+)\)/i);
         if (pkMatch) {
-          const pkCols = pkMatch[1].split(",").map((c) => c.trim().replace(/[`"']/g, ""));
+          const pkCols = pkMatch[1]
+            .split(",")
+            .map((c) => c.trim().replace(/[`"']/g, ""));
           columns.forEach((col) => {
             if (pkCols.includes(col.name)) col.isPrimary = true;
           });
@@ -125,7 +127,7 @@ function parseSqlFallback(sql: string): ParsedSchema {
       // FOREIGN KEY constraint
       if (/^(?:CONSTRAINT\s+\w+\s+)?FOREIGN\s+KEY/i.test(trimmed)) {
         const fkMatch = trimmed.match(
-          /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+[`"']?(\w+)[`"']?\s*\(([^)]+)\)/i
+          /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+[`"']?(\w+)[`"']?\s*\(([^)]+)\)/i,
         );
         if (fkMatch) {
           relations.push({
@@ -143,7 +145,9 @@ function parseSqlFallback(sql: string): ParsedSchema {
       if (/^UNIQUE/i.test(trimmed)) continue;
 
       // Column definition: name type [constraints...]
-      const colMatch = trimmed.match(/^[`"']?(\w+)[`"']?\s+(\w+(?:\([^)]*\))?)(.*)/i);
+      const colMatch = trimmed.match(
+        /^[`"']?(\w+)[`"']?\s+(\w+(?:\([^)]*\))?)(.*)/i,
+      );
       if (!colMatch) continue;
 
       const colName = colMatch[1];
@@ -177,9 +181,13 @@ function parseJsonFallback(jsonStr: string): ParsedSchema {
     // Try to infer tables from top-level keys
     const tables: ParsedTable[] = [];
     for (const [key, value] of Object.entries(data)) {
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         const columns: ParsedColumn[] = Object.entries(
-          value as Record<string, unknown>
+          value as Record<string, unknown>,
         ).map(([field, val]) => ({
           name: field,
           type: inferJsonType(val),
@@ -200,15 +208,18 @@ function parseJsonFallback(jsonStr: string): ParsedSchema {
 function inferJsonType(val: unknown): string {
   if (val === null) return "TEXT";
   switch (typeof val) {
-    case "number": return Number.isInteger(val) ? "INT" : "FLOAT";
-    case "boolean": return "BOOLEAN";
+    case "number":
+      return Number.isInteger(val) ? "INT" : "FLOAT";
+    case "boolean":
+      return "BOOLEAN";
     case "string": {
       const s = val as string;
       if (/^\d{4}-\d{2}-\d{2}/.test(s)) return "DATETIME";
       if (s.length > 100) return "TEXT";
       return "VARCHAR";
     }
-    default: return "TEXT";
+    default:
+      return "TEXT";
   }
 }
 
@@ -238,7 +249,7 @@ function extractDefault(rest: string): string | undefined {
 // ─── Main export: AI with fallback ───────────────────────────────────────────
 export async function parseSchema(
   fileContent: string,
-  fileType: "sql" | "json"
+  fileType: "sql" | "json",
 ): Promise<ParsedSchema & { usedFallback?: boolean }> {
   // Skip AI if no key configured
   const hasApiKey =
@@ -256,7 +267,9 @@ export async function parseSchema(
       const isNotFound = msg.includes("404") || msg.includes("NOT_FOUND");
 
       if (!isRateLimit && !isNotFound) throw err; // Unexpected error — rethrow
-      console.warn(`AI parse failed (${isRateLimit ? "rate limit" : "not found"}), using fallback parser`);
+      console.warn(
+        `AI parse failed (${isRateLimit ? "rate limit" : "not found"}), using fallback parser`,
+      );
     }
   }
 

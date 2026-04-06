@@ -11,12 +11,16 @@ const Home = () => {
   return (
     <GenerateProvider>
       <div className="flex h-screen overflow-hidden bg-slate-50/30">
-        <Sidebar />
-        <main className="flex-1 flex flex-col overflow-hidden bg-white/50">
+        <div className="hidden md:block shrink-0">
+           <Sidebar />
+        </div>
+        <main className="flex-1 flex flex-col overflow-hidden bg-white/50 min-w-0">
           <TopNav />
-          <div className="flex-1 flex p-8 gap-8 overflow-hidden">
-            <SourceSchema />
-            <CodePreview />
+          <div className="flex-1 overflow-y-auto lg:overflow-hidden p-4 lg:p-8">
+            <div className="flex flex-col xl:flex-row gap-6 lg:gap-8 h-full min-w-0">
+              <SourceSchema />
+              <CodePreview />
+            </div>
           </div>
           <Footer />
         </main>
