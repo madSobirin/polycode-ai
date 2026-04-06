@@ -101,7 +101,10 @@ model History {
   // Menggunakan tipe JSON untuk menyimpan file hasil generate
   // Formatnya misal: { "schema.prisma": "...", "user_model.dart": "..." }
   generatedCode Json      
-  
+
+  // Menyimpan ZIP binary untuk download
+  zipBuffer     Bytes?
+
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   

@@ -1,140 +1,123 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Search, Download } from "lucide-react";
+import {
+  Copy,
+  Download,
+  Check,
+  Loader2,
+  FileCode,
+  Sparkles,
+} from "lucide-react";
+import { useGenerate } from "@/components/GenerateContext";
+import type { GeneratedFile } from "@/types/schema";
 
-interface CodeTab {
-  label: string;
-  content: React.ReactNode;
+/* ─── Simple syntax highlighter ─── */
+function highlightCode(code: string, filename: string): React.ReactNode {
+  const lines = code.split("\n");
+  const isPrisma = filename.endsWith(".prisma");
+  const isDart = filename.endsWith(".dart");
+  const isTs = filename.endsWith(".ts");
+
+  return (
+    <div className="font-mono text-[13px] leading-relaxed">
+      {lines.map((line, i) => (
+        <div key={i} className="flex">
+          <span className="select-none w-10 shrink-0 text-slate-600 text-right pr-4 text-[11px] leading-relaxed">
+            {i + 1}
+          </span>
+          <span
+            className={`flex-1 whitespace-pre ${getLineClass(line, isPrisma, isDart, isTs)}`}
+          >
+            {line || " "}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-/* ─── Syntax color classes ─── */
-const kw = "text-purple-400"; // keyword
-const str = "text-green-400"; // string
-const fn = "text-blue-400"; // function
-const cmt = "text-slate-500"; // comment
+function getLineClass(
+  line: string,
+  isPrisma: boolean,
+  isDart: boolean,
+  isTs: boolean
+): string {
+  const trimmed = line.trim();
+  if (trimmed.startsWith("//") || trimmed.startsWith("*"))
+    return "text-slate-500 italic";
+  if (isPrisma) {
+    if (/^(model|datasource|generator|enum)\s/.test(trimmed))
+      return "text-purple-400 font-semibold";
+    if (/^@/.test(trimmed)) return "text-amber-400";
+  }
+  if (isDart) {
+    if (/^(class|final|required|factory|return)\b/.test(trimmed))
+      return "text-purple-400 font-semibold";
+  }
+  if (isTs) {
+    if (/^(export|interface|type|import)\b/.test(trimmed))
+      return "text-purple-400 font-semibold";
+  }
+  return "text-white/90";
+}
 
-const prismaCode = (
-  <>
-    <div>
-      <span className={kw}>datasource</span> db {"{"}
-    </div>
-    <div className="pl-6">
-      provider = <span className={str}>&quot;postgresql&quot;</span>
-    </div>
-    <div className="pl-6">
-      url &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span className={fn}>env</span>(
-      <span className={str}>&quot;DATABASE_URL&quot;</span>)
-    </div>
-    <div>{"}"}</div>
-
-    <div className="mt-4">
-      <span className={kw}>generator</span> client {"{"}
-    </div>
-    <div className="pl-6">
-      provider = <span className={str}>&quot;prisma-client-js&quot;</span>
-    </div>
-    <div>{"}"}</div>
-
-    <div className="mt-4">
-      <span className={kw}>model</span> <span className={fn}>User</span> {"{"}
-    </div>
-    <div className="pl-6">
-      id &nbsp;&nbsp;&nbsp;<span className={kw}>String</span> &nbsp;@id
-      @default(
-      <span className={fn}>uuid</span>())
-    </div>
-    <div className="pl-6">
-      email <span className={kw}>String</span> &nbsp;@unique
-    </div>
-    <div className="pl-6">
-      name &nbsp;<span className={kw}>String</span>?
-    </div>
-    <div className="pl-6">
-      posts <span className={fn}>Post</span>[]
-    </div>
-    <div className="pl-6">
-      <span className={cmt}>{"// Tracking fields"}</span>
-    </div>
-    <div className="pl-6">
-      createdAt <span className={kw}>DateTime</span> @default(
-      <span className={fn}>now</span>())
-    </div>
-    <div>{"}"}</div>
-
-    <div className="mt-4">
-      <span className={kw}>model</span> <span className={fn}>Post</span> {"{"}
-    </div>
-    <div className="pl-6">
-      id &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <span className={kw}>Int</span> &nbsp;&nbsp;&nbsp;&nbsp;@id @default(
-      <span className={fn}>autoincrement</span>())
-    </div>
-    <div className="pl-6">
-      title &nbsp;&nbsp;&nbsp;&nbsp;<span className={kw}>String</span>
-    </div>
-    <div className="pl-6">
-      content &nbsp;&nbsp;<span className={kw}>String</span>?
-    </div>
-    <div className="pl-6">
-      published <span className={kw}>Boolean</span> @default(
-      <span className={kw}>false</span>)
-    </div>
-    <div className="pl-6">
-      author &nbsp;&nbsp;&nbsp;<span className={fn}>User</span>{" "}
-      &nbsp;&nbsp;&nbsp;@relation(fields: [authorId], references: [id])
-    </div>
-    <div className="pl-6">
-      authorId &nbsp;<span className={kw}>String</span>
-    </div>
-    <div>{"}"}</div>
-  </>
+/* ─── Empty state ────────────────────────────────────────────────────────── */
+const EmptyState = ({ isLoading }: { isLoading: boolean }) => (
+  <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+    {isLoading ? (
+      <>
+        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+        <div>
+          <div className="text-white/80 font-bold text-lg">
+            AI is working...
+          </div>
+          <div className="text-slate-500 text-sm mt-1">
+            Parsing schema and generating code
+          </div>
+        </div>
+      </>
+    ) : (
+      <>
+        <div className="w-16 h-16 rounded-2xl bg-slate-700/50 flex items-center justify-center">
+          <Sparkles className="w-8 h-8 text-slate-500" />
+        </div>
+        <div>
+          <div className="text-white/40 font-bold text-lg">
+            No output yet
+          </div>
+          <div className="text-slate-600 text-sm mt-1">
+            Upload a schema and click Generate to see results here
+          </div>
+        </div>
+      </>
+    )}
+  </div>
 );
 
-const dartCode = (
-  <>
-    <div>
-      <span className={kw}>class</span> <span className={fn}>User</span> {"{"}
-    </div>
-    <div className="pl-6">
-      <span className={kw}>final</span> <span className={kw}>String</span> id;
-    </div>
-    <div className="pl-6">
-      <span className={kw}>final</span> <span className={kw}>String</span>{" "}
-      email;
-    </div>
-    <div className="pl-6">
-      <span className={kw}>final</span> <span className={kw}>String</span>?
-      name;
-    </div>
-    <div className="pl-6">
-      <span className={kw}>final</span> <span className={fn}>DateTime</span>{" "}
-      createdAt;
-    </div>
-    <div className="mt-2 pl-6">
-      <span className={fn}>User</span>({"{"}
-      <span className={kw}>required</span> <span className={kw}>this</span>.id,{" "}
-      <span className={kw}>required</span> <span className={kw}>this</span>
-      .email, <span className={kw}>this</span>
-      .name, <span className={kw}>required</span>{" "}
-      <span className={kw}>this</span>.createdAt{"}"});
-    </div>
-    <div>{"}"}</div>
-  </>
-);
-
-const codeTabs: CodeTab[] = [
-  { label: "schema.prisma", content: prismaCode },
-  { label: "model.dart", content: dartCode },
-];
-
+/* ─── Main Component ─────────────────────────────────────────────────────── */
 const CodePreview = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  const { result, isLoading, activeTab, setActiveTab, copyToClipboard, download } =
+    useGenerate();
+
   const [viewMode, setViewMode] = useState<"editor" | "docs">("editor");
+  const [copied, setCopied] = useState(false);
+
+  const files: GeneratedFile[] = result?.files ?? [];
+  const activeFile = files.find((f) => f.filename === activeTab) ?? files[0];
+
+  const handleCopy = async () => {
+    if (!activeFile) return;
+    await copyToClipboard(activeFile.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <section className="flex-[1.5] flex flex-col gap-6">
-      {/* Header with toggle */}
+      {/* Header */}
       <div className="flex justify-between items-end">
         <header>
           <h2 className="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">
@@ -145,26 +128,19 @@ const CodePreview = () => {
           </h1>
         </header>
         <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
-          <button
-            onClick={() => setViewMode("editor")}
-            className={`px-4 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-              viewMode === "editor"
-                ? "bg-white shadow-sm text-blue-600"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Editor
-          </button>
-          <button
-            onClick={() => setViewMode("docs")}
-            className={`px-4 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-              viewMode === "docs"
-                ? "bg-white shadow-sm text-blue-600"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Docs
-          </button>
+          {(["editor", "docs"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`px-4 py-2 text-xs font-bold rounded-md transition-all cursor-pointer capitalize ${
+                viewMode === mode
+                  ? "bg-white shadow-sm text-blue-600"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -179,44 +155,127 @@ const CodePreview = () => {
             <div className="w-3 h-3 rounded-full bg-green-500" />
           </div>
 
-          {/* File tabs */}
-          <div className="flex gap-px">
-            {codeTabs.map((tab, index) => (
-              <button
-                key={tab.label}
-                onClick={() => setActiveTab(index)}
-                className={`px-4 py-3 text-[11px] font-medium transition-colors cursor-pointer ${
-                  index === activeTab
-                    ? "bg-[#1e1e1e] text-white border-t-2 border-blue-500"
-                    : "bg-[#2d2d2d] text-slate-500 hover:bg-[#3d3d3d]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* File tabs — from real result or placeholders */}
+          <div className="flex gap-px overflow-x-auto">
+            {files.length > 0 ? (
+              files.map((file) => (
+                <button
+                  key={file.filename}
+                  onClick={() => setActiveTab(file.filename)}
+                  className={`px-4 py-3 text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    file.filename === activeTab
+                      ? "bg-[#1e1e1e] text-white border-t-2 border-blue-500"
+                      : "bg-[#2d2d2d] text-slate-500 hover:bg-[#3d3d3d]"
+                  }`}
+                >
+                  {file.filename}
+                </button>
+              ))
+            ) : (
+              <span className="px-4 py-3 text-[11px] text-slate-600">
+                Waiting for generation...
+              </span>
+            )}
           </div>
 
           {/* Action icons */}
-          <div className="flex items-center gap-4">
-            <button className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
-              <Copy className="w-4 h-4" />
-            </button>
-            <button className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
-              <Search className="w-4 h-4" />
+          <div className="flex items-center gap-4 shrink-0">
+            <button
+              onClick={handleCopy}
+              disabled={!activeFile}
+              className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer disabled:opacity-30"
+              title="Copy to clipboard"
+            >
+              {copied ? (
+                <Check className="w-4 h-4 text-green-400" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Code content */}
-        <div className="flex-1 p-6 font-mono text-[13px] leading-relaxed overflow-y-auto text-white/90">
-          {codeTabs[activeTab].content}
+        <div className="flex-1 p-6 overflow-y-auto">
+          {viewMode === "editor" ? (
+            activeFile ? (
+              highlightCode(activeFile.content, activeFile.filename)
+            ) : (
+              <EmptyState isLoading={isLoading} />
+            )
+          ) : (
+            /* Docs view — summary table */
+            <div className="text-white/90">
+              {result ? (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-blue-400 font-bold text-sm mb-3 uppercase tracking-widest">
+                      Generation Summary
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { label: "Tables Found", value: result.summary.tablesFound },
+                        { label: "Relations", value: result.summary.relationsFound },
+                        { label: "Files Generated", value: result.summary.filesGenerated },
+                        { label: "Targets", value: result.summary.targets.join(", ") },
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="bg-white/5 rounded-lg p-3"
+                        >
+                          <div className="text-slate-400 text-[11px] uppercase tracking-widest mb-1">
+                            {item.label}
+                          </div>
+                          <div className="text-white font-bold text-lg">
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-blue-400 font-bold text-sm mb-3 uppercase tracking-widest">
+                      Generated Files
+                    </h3>
+                    <div className="space-y-2">
+                      {files.map((f) => (
+                        <div
+                          key={f.filename}
+                          className="flex items-center gap-2 bg-white/5 rounded-lg p-3"
+                        >
+                          <FileCode className="w-4 h-4 text-blue-400 shrink-0" />
+                          <span className="font-mono text-sm text-white/80">
+                            {f.target}/{f.filename}
+                          </span>
+                          <span className="ml-auto text-slate-500 text-xs">
+                            {f.content.split("\n").length} lines
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState isLoading={isLoading} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Download Button */}
-      <button className="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-lg">
+      <button
+        onClick={download}
+        disabled={!result}
+        className="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-xl
+          font-bold text-sm tracking-wide flex items-center justify-center gap-2
+          transition-colors cursor-pointer shadow-lg
+          disabled:opacity-40 disabled:cursor-not-allowed"
+      >
         <Download className="w-4 h-4" />
-        Download All (.zip)
+        {result
+          ? `Download All (.zip) — ${result.summary.filesGenerated} files`
+          : "Download All (.zip)"}
       </button>
     </section>
   );
